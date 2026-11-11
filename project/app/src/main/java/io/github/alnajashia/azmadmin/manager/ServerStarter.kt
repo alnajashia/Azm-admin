@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit
 /**
  * Builds and (for root) runs the server start command.
  *
- * The ADB path cannot be executed by the app itself — Android gives an
- * ordinary app no way to spawn a shell-UID process — so the manager shows
- * the exact, device-specific command for the user to run from a computer or
- * a wireless-debugging terminal. The root path can be executed in-app
- * through `su` when a root manager is installed and grants it.
+ * Three start paths run the same [serverShellCommand]: the manager shows
+ * it as an ADB command for a connected computer; [WirelessStarter]
+ * executes it in-app through the on-device wireless-debugging ADB
+ * connection after the user pairs; and the root path runs it through
+ * `su` when a root manager is installed and grants it.
  */
 object ServerStarter {
 

@@ -49,14 +49,26 @@ Updated 2026-11-11. Statuses use the brief's three levels.
   dex contains zero Shizuku references. Not published and Azm's version
   not bumped — device E2E comes first.
 
+## Wireless-debugging start — implemented in v1.0.1 (2026-11-11)
+- Added the same day Ahmed rejected the computer-only start on his
+  unrooted phone: the manager now pairs and starts the server entirely
+  on-device through wireless debugging, exactly like Shizuku — SPAKE2
+  pairing with the 6-digit code, TLS connect, and the same app_process
+  starter command executed over the ADB shell stream
+  (`manager/WirelessStarter.kt`, `manager/AzmAdbManager.kt` — the
+  manager's own persistent RSA ADB identity). mDNS discovery pre-fills
+  the pairing/connect ports; manual entry remains. Built on
+  libadb-android 3.1.1 + Conscrypt + BouncyCastle (see
+  THIRD_PARTY_LICENSES.md). Build-verified (assembleDebug, unit tests
+  10/10, APK v1.0.1 code 2) — the pairing/start flow itself is still
+  **untested on a real device** until Ahmed runs it.
+
 ## Not implemented yet
-- Wireless-debugging pairing/start inside the manager (later increment,
-  as recorded in the handover; the ADB-command and root paths are the
-  v1 startup mechanisms, and the UI must not fake a wireless button).
 - Dedicated Azm Admin release signing (new keystore to be created at
   Stage 15 and backed up to the private Drive folder — never to GitHub).
-- GitHub push to `alnajashia/Azm-admin` and the Google Drive `azm admin`
-  folder — both on Ahmed's explicit go-ahead.
+- The Google Drive `azm admin` folder — on Ahmed's explicit go-ahead.
+  (Code push and Release v1.0.0 were published 2026-11-11 at his
+  request; the v1.0.1 wireless build follows the same route on his word.)
 - Real-device testing of every server behaviour (needs Ahmed's phone):
   ADB start, binder push/pull, approval round-trip, provisioning Azm,
   revocation, unauthorized rejection, server stop/restart, reboot

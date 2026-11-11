@@ -13,10 +13,19 @@
     <string name="stop_server">Stop server</string>
 
     <string name="start_title">Start the server</string>
-    <string name="start_explanation">Azm Admin cannot start its privileged server by itself: Android only lets the shell (ADB) or root identity create that process. Run this command once from a computer with the phone connected (or from a wireless-debugging terminal). The server stops when the phone reboots.</string>
+    <string name="start_explanation">Three ways to start the server: wireless debugging below (no computer), this ADB command from a computer with the phone connected, or root on rooted devices. The server stops when the phone reboots.</string>
     <string name="copy_command">Copy ADB command</string>
     <string name="copied">Copied</string>
     <string name="start_via_root">Start via root</string>
+    <string name="wireless_title">Start via wireless debugging (no computer)</string>
+    <string name="wireless_steps">1. Open Developer options and turn on Wireless debugging.\n2. Tap \"Pair device with pairing code\" — Android shows a 6-digit code and a pairing port. Enter both below and tap Pair (needed once).\n3. The wireless debugging screen also shows a connect port under \"IP address and port\" — enter it and tap Start. Azm Admin finds both ports automatically when it can, so they may already be filled in.</string>
+    <string name="pairing_port_hint">Pairing port</string>
+    <string name="pairing_code_hint">Pairing code (6 digits)</string>
+    <string name="pair_button">Pair</string>
+    <string name="connect_port_hint">Connect port</string>
+    <string name="wireless_start_button">Start server via wireless</string>
+    <string name="wireless_working">Working…</string>
+    <string name="wireless_result">Wireless: %1$s</string>
     <string name="root_start_result">Root start: %1$s</string>
 
     <string name="clients_title">Authorized applications</string>

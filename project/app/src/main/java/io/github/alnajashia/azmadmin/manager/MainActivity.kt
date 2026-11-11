@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import io.github.alnajashia.azmadmin.R
 import io.github.alnajashia.azmadmin.client.AzmAdmin
 import org.json.JSONArray
@@ -37,6 +38,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var clientsList: LinearLayout
     private lateinit var authorizeAzmButton: MaterialButton
     private lateinit var diagnosticsButton: MaterialButton
+    private lateinit var pairingPortInput: TextInputEditText
+    private lateinit var pairingCodeInput: TextInputEditText
+    private lateinit var connectPortInput: TextInputEditText
+    private lateinit var wirelessStatusText: TextView
+    private var discovery: WirelessStarter.Discovery? = null
 
     @Volatile
     private var serverRunning = false
@@ -54,8 +60,55 @@ class MainActivity : AppCompatActivity() {
         clientsList = findViewById(R.id.clientsList)
         authorizeAzmButton = findViewById(R.id.authorizeAzmButton)
         diagnosticsButton = findViewById(R.id.diagnosticsButton)
+        pairingPortInput = findViewById(R.id.pairingPortInput)
+        pairingCodeInput = findViewById(R.id.pairingCodeInput)
+        connectPortInput = findViewById(R.id.connectPortInput)
+        wirelessStatusText = findViewById(R.id.wirelessStatusText)
 
         adbCommandText.text = ServerStarter.adbCommand(this)
+
+        discovery = WirelessStarter.Discovery(
+            this,
+            onPairingPort = { port ->
+                runOnUiThread {
+                    if (pairingPortInput.text.isNullOrBlank()) {
+                        pairingPortInput.setText(port.toString())
+                    }
+                }
+            },
+            onConnectPort = { port ->
+                runOnUiThread {
+                    if (connectPortInput.text.isNullOrBlank()) {
+                        connectPortInput.setText(port.toString())
+                    }
+                }
+            },
+        )
+
+        findViewById<MaterialButton>(R.id.pairButton).setOnClickListener {
+            val port = pairingPortInput.text?.toString()?.toIntOrNull() ?: -1
+            val code = pairingCodeInput.text?.toString()?.trim().orEmpty()
+            wirelessStatusText.text = getString(R.string.wireless_working)
+            io.execute {
+                val result = WirelessStarter.pair(this, port, code)
+                runOnUiThread {
+                    wirelessStatusText.text = getString(R.string.wireless_result, result.message)
+                }
+            }
+        }
+        findViewById<MaterialButton>(R.id.wirelessStartButton).setOnClickListener {
+            val port = connectPortInput.text?.toString()?.toIntOrNull() ?: -1
+            wirelessStatusText.text = getString(R.string.wireless_working)
+            io.execute {
+                val result = WirelessStarter.startServer(this, port)
+                runOnUiThread {
+                    wirelessStatusText.text = getString(R.string.wireless_result, result.message)
+                }
+                // Give the server a moment to come up and push its binder.
+                Thread.sleep(2000)
+                refresh()
+            }
+        }
 
         findViewById<MaterialButton>(R.id.refreshButton).setOnClickListener { refresh() }
         findViewById<MaterialButton>(R.id.copyCommandButton).setOnClickListener {
@@ -99,6 +152,12 @@ class MainActivity : AppCompatActivity() {
                 refresh()
             }
         }
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(android.Manifest.permission.NEARBY_WIFI_DEVICES) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(android.Manifest.permission.NEARBY_WIFI_DEVICES), 41)
+        }
         diagnosticsButton.setOnClickListener {
             io.execute {
                 val text = try {
@@ -115,6 +174,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        discovery?.start()
+    }
+
+    override fun onStop() {
+        discovery?.stop()
+        super.onStop()
     }
 
     override fun onResume() {

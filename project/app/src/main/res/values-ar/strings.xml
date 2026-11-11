@@ -13,10 +13,19 @@
     <string name="stop_server">إيقاف الخادم</string>
 
     <string name="start_title">تشغيل الخادم</string>
-    <string name="start_explanation">لا يستطيع «إدارة عزم» تشغيل خادمه المميّز بنفسه: فنظام أندرويد لا يسمح بإنشاء تلك العملية إلا لهوية الشل (ADB) أو الجذر. شغّل هذا الأمر مرة واحدة من جهاز كمبيوتر متصل بالهاتف (أو من طرفية تصحيح لاسلكي). يتوقف الخادم عند إعادة تشغيل الهاتف.</string>
+    <string name="start_explanation">ثلاث طرق لتشغيل الخادم: تصحيح الأخطاء اللاسلكي بالأسفل (بدون كمبيوتر)، أو أمر ADB هذا من جهاز كمبيوتر متصل بالهاتف، أو الجذر في الأجهزة المُجذّرة. يتوقف الخادم عند إعادة تشغيل الهاتف.</string>
     <string name="copy_command">نسخ أمر ADB</string>
     <string name="copied">تم النسخ</string>
     <string name="start_via_root">التشغيل عبر الجذر</string>
+    <string name="wireless_title">التشغيل عبر تصحيح الأخطاء اللاسلكي (بدون كمبيوتر)</string>
+    <string name="wireless_steps">١. من خيارات المطوّر فعّل «تصحيح الأخطاء اللاسلكي».\n٢. اضغط «إقران الجهاز برمز الإقران» — سيظهر رمز من ٦ أرقام ومنفذ إقران. أدخلهما بالأسفل واضغط «إقران» (مرة واحدة فقط).\n٣. شاشة التصحيح اللاسلكي تُظهر أيضًا منفذ الاتصال تحت «عنوان IP والمنفذ» — أدخله واضغط «تشغيل». تحاول «إدارة عزم» اكتشاف المنفذين تلقائيًا، فقد تجدهما ممتلئين أصلًا.</string>
+    <string name="pairing_port_hint">منفذ الإقران</string>
+    <string name="pairing_code_hint">رمز الإقران (٦ أرقام)</string>
+    <string name="pair_button">إقران</string>
+    <string name="connect_port_hint">منفذ الاتصال</string>
+    <string name="wireless_start_button">تشغيل الخادم عبر اللاسلكي</string>
+    <string name="wireless_working">جارٍ العمل…</string>
+    <string name="wireless_result">اللاسلكي: %1$s</string>
     <string name="root_start_result">تشغيل الجذر: %1$s</string>
 
     <string name="clients_title">التطبيقات المخوّلة</string>

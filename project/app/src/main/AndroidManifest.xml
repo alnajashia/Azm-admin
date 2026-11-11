@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Wireless-debugging start: the manager talks to the device's own
+         ADB daemon over the local network interface (127.0.0.1) once the
+         user pairs it from Developer options. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation" />
+
     <!-- Lets the manager see (and only see) the known client app for status
          and approval shortcuts; package identity of other clients is
          resolved by the privileged server, not by the manager UI. -->
@@ -9,6 +19,7 @@
     </queries>
 
     <application
+        android:name=".AzmAdminApplication"
         android:label="@string/app_name"
         android:theme="@style/Theme.AzmAdmin"
         android:supportsRtl="true">
