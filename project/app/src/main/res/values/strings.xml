@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Azm Admin</string>
+
+    <string name="server_status_title">Server status</string>
+    <string name="status_running">Running</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_mode_shell">Mode: ADB shell (UID 2000)</string>
+    <string name="status_mode_root">Mode: Root (UID 0)</string>
+    <string name="status_mode_other">Mode: UID %1$d</string>
+    <string name="status_api_version">API version %1$d</string>
+    <string name="refresh">Refresh</string>
+    <string name="stop_server">Stop server</string>
+
+    <string name="start_title">Start the server</string>
+    <string name="start_explanation">Azm Admin cannot start its privileged server by itself: Android only lets the shell (ADB) or root identity create that process. Run this command once from a computer with the phone connected (or from a wireless-debugging terminal). The server stops when the phone reboots.</string>
+    <string name="copy_command">Copy ADB command</string>
+    <string name="copied">Copied</string>
+    <string name="start_via_root">Start via root</string>
+    <string name="root_start_result">Root start: %1$s</string>
+
+    <string name="clients_title">Authorized applications</string>
+    <string name="clients_none">No authorized applications yet.</string>
+    <string name="client_line">%1$s\nUID %2$d</string>
+    <string name="revoke">Revoke</string>
+    <string name="authorize_azm">Authorize Azm</string>
+    <string name="azm_not_installed">Azm is not installed on this device.</string>
+
+    <string name="pending_title">Pending requests</string>
+    <string name="pending_none">No pending requests.</string>
+    <string name="approve">Approve</string>
+
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics">Show diagnostics</string>
+    <string name="close">Close</string>
+
+    <string name="request_title">Authorization request</string>
+    <string name="request_body">%1$s is asking to use Azm Admin\'s privileged operations (provision Device Owner, grant WRITE_SECURE_SETTINGS, enable its accessibility service). Approve only applications you trust.</string>
+    <string name="request_missing_package">No package was supplied with this request.</string>
+    <string name="request_server_unavailable">The Azm Admin server is not reachable, so this request cannot be answered.</string>
+    <string name="request_result">Result: %1$s</string>
+</resources>

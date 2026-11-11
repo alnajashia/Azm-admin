@@ -1,0 +1,22 @@
+package io.github.alnajashia.azmadmin.api
+
+import android.os.IBinder
+import android.os.Parcel
+import android.os.Parcelable
+
+/** Carries an [IBinder] inside a Bundle through a ContentProvider call. */
+class BinderContainer(val binder: IBinder?) : Parcelable {
+
+    constructor(parcel: Parcel) : this(parcel.readStrongBinder())
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeStrongBinder(binder)
+    }
+
+    override fun describeContents(): Int = 0
+
+    companion object CREATOR : Parcelable.Creator<BinderContainer> {
+        override fun createFromParcel(parcel: Parcel): BinderContainer = BinderContainer(parcel)
+        override fun newArray(size: Int): Array<BinderContainer?> = arrayOfNulls(size)
+    }
+}

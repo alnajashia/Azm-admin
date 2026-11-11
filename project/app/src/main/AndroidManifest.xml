@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Lets the manager see (and only see) the known client app for status
+         and approval shortcuts; package identity of other clients is
+         resolved by the privileged server, not by the manager UI. -->
+    <queries>
+        <package android:name="io.github.alnajashia.dominanter" />
+    </queries>
+
+    <application
+        android:label="@string/app_name"
+        android:theme="@style/Theme.AzmAdmin"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".manager.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Opened by the privileged server (via `am start`) when a client
+             requests authorization. The approval itself is recorded by the
+             server through its manager-only approveClient call, which this
+             activity makes as the manager app. -->
+        <activity
+            android:name=".manager.RequestPermissionActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AzmAdmin.Dialog" />
+
+        <!-- Receives the server binder push and redistributes it to client
+             apps that pull it through the client library. Exported by
+             necessity (the server process and other apps call it); holding
+             the binder is not a privilege, the server authorizes per call. -->
+        <provider
+            android:name=".manager.ManagerBinderProvider"
+            android:authorities="io.github.alnajashia.azmadmin.binder"
+            android:exported="true" />
+    </application>
+</manifest>

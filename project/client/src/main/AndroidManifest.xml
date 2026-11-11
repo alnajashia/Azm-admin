@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Library manifest: the consuming app declares AzmAdminProvider itself
+         (authority ${applicationId}.azmadmin) so each client app owns its
+         provider identity, exactly like Shizuku's provider model. -->
+</manifest>
