@@ -1,11 +1,6 @@
 package io.github.alnajashia.azmadmin.manager
 
 import android.content.Context
-import android.net.nsd.NsdManager
-import android.net.nsd.NsdServiceInfo
-import android.net.wifi.WifiManager
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 /**
  * Starts the privileged server through wireless debugging, entirely on
@@ -48,18 +43,32 @@ object WirelessStarter {
         }
     }
 
-    fun startServer(context: Context, port: Int): WirelessResult {
+    fun startServer(context: Context, port: Int): WirelessResult =
+        startServerLogged(context, port) {}
+
+    /**
+     * Connects to adbd on [port] and runs the starter command, reporting
+     * each real step to [log] (the Starter screen shows these lines).
+     */
+    fun startServerLogged(
+        context: Context,
+        port: Int,
+        log: (String) -> Unit,
+    ): WirelessResult {
         if (port !in 1..65535) return WirelessResult(false, "invalid connect port")
         return try {
             val manager = AzmAdbManager.getInstance(context)
             if (!manager.isConnected) {
+                log("info: connecting to $HOST:$port")
                 val connected = manager.connect(HOST, port)
                 if (!connected) {
                     return WirelessResult(false, "connect failed — pair first and check the connect port")
                 }
+                log("info: connected")
             }
             val command = "mkdir -p /data/local/tmp/azmadmin; " +
                 ServerStarter.serverShellCommand(context) + " >/dev/null 2>&1 &"
+            log("info: running starter via adb shell")
             manager.openStream("shell:$command").use { stream ->
                 // Give app_process a moment to detach and push its binder,
                 // then close; the server lives on independently.
@@ -67,6 +76,7 @@ object WirelessStarter {
                 stream.openOutputStream().flush()
             }
             runCatching { manager.disconnect() }
+            log("info: starter command sent")
             WirelessResult(true, "start command sent")
         } catch (e: Exception) {
             WirelessResult(false, "wireless start failed: ${e.message}")
@@ -74,74 +84,27 @@ object WirelessStarter {
     }
 
     /**
-     * mDNS listener for the two wireless-debugging services. Android
-     * announces `_adb-tls-pairing._tcp` while the pairing dialog is open
-     * and `_adb-tls-connect._tcp` whenever wireless debugging is on.
-     * Discovered ports are reported to the callbacks; manual entry stays
-     * available whenever discovery finds nothing.
+     * mDNS listener for the two wireless-debugging services, used by the
+     * dashboard to pre-fill the manual port fields. Discovered ports are
+     * reported to the callbacks; manual entry stays available whenever
+     * discovery finds nothing.
      */
     class Discovery(
         context: Context,
-        private val onPairingPort: (Int) -> Unit,
-        private val onConnectPort: (Int) -> Unit,
+        onPairingPort: (Int) -> Unit,
+        onConnectPort: (Int) -> Unit,
     ) {
-        private val nsd = context.getSystemService(NsdManager::class.java)
-        private val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
-        private val multicastLock: WifiManager.MulticastLock? =
-            wifi?.createMulticastLock("azmadmin-mdns")?.apply { setReferenceCounted(true) }
-        private val resolveExecutor = Executors.newSingleThreadExecutor()
-        private var running = false
-
-        private fun listener(expectedType: String, callback: (Int) -> Unit) =
-            object : NsdManager.DiscoveryListener {
-                override fun onServiceFound(serviceInfo: NsdServiceInfo) {
-                    nsd.resolveService(serviceInfo, resolveExecutor,
-                        object : NsdManager.ResolveListener {
-                            override fun onServiceResolved(resolved: NsdServiceInfo) {
-                                if (resolved.serviceType.contains("_adb-tls-")) {
-                                    callback(resolved.port)
-                                }
-                            }
-
-                            override fun onResolveFailed(info: NsdServiceInfo, error: Int) = Unit
-                        })
-                }
-
-                override fun onDiscoveryStarted(serviceType: String) = Unit
-                override fun onDiscoveryStopped(serviceType: String) = Unit
-                override fun onServiceLost(serviceInfo: NsdServiceInfo) = Unit
-                override fun onStartDiscoveryFailed(serviceType: String, error: Int) = Unit
-                override fun onStopDiscoveryFailed(serviceType: String, error: Int) = Unit
-            }
-
-        private var pairingListener: NsdManager.DiscoveryListener? = null
-        private var connectListener: NsdManager.DiscoveryListener? = null
+        private val pairing = PortDiscovery(context, PortDiscovery.TLS_PAIRING, onPairingPort)
+        private val connect = PortDiscovery(context, PortDiscovery.TLS_CONNECT, onConnectPort)
 
         fun start() {
-            if (running) return
-            running = true
-            runCatching { multicastLock?.acquire() }
-            pairingListener = listener(PAIRING_TYPE, onPairingPort)
-            connectListener = listener(CONNECT_TYPE, onConnectPort)
-            runCatching { nsd.discoverServices(PAIRING_TYPE, NsdManager.PROTOCOL_DNS_SD, pairingListener) }
-            runCatching { nsd.discoverServices(CONNECT_TYPE, NsdManager.PROTOCOL_DNS_SD, connectListener) }
+            pairing.start()
+            connect.start()
         }
 
         fun stop() {
-            if (!running) return
-            running = false
-            pairingListener?.let { runCatching { nsd.stopServiceDiscovery(it) } }
-            connectListener?.let { runCatching { nsd.stopServiceDiscovery(it) } }
-            pairingListener = null
-            connectListener = null
-            runCatching { multicastLock?.release() }
-            resolveExecutor.shutdown()
-            runCatching { resolveExecutor.awaitTermination(1, TimeUnit.SECONDS) }
-        }
-
-        companion object {
-            const val PAIRING_TYPE = "_adb-tls-pairing._tcp"
-            const val CONNECT_TYPE = "_adb-tls-connect._tcp"
+            pairing.stop()
+            connect.stop()
         }
     }
 }

@@ -15,9 +15,15 @@ class AzmAdminApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Security.insertProviderAt(Conscrypt.newProvider(), 1)
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
+        io.github.alnajashia.azmadmin.manager.CrashLog.install(this)
+        // Provider setup must never be able to take the app down at
+        // startup: if a provider fails to load on some device, the
+        // wireless path reports its own error when used instead.
+        runCatching { Security.insertProviderAt(Conscrypt.newProvider(), 1) }
+        runCatching {
+            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                Security.addProvider(BouncyCastleProvider())
+            }
         }
     }
 }

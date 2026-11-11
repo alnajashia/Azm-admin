@@ -49,6 +49,24 @@ Updated 2026-11-11. Statuses use the brief's three levels.
   dex contains zero Shizuku references. Not published and Azm's version
   not bumped — device E2E comes first.
 
+## v1.0.3 — Shizuku-shaped wireless flow + v1.0.1 crash fix (2026-11-11)
+- v1.0.1 crashed on Ahmed's phone at launch: the mDNS discovery called
+  the API-34-only `resolveService(Executor)` overload unguarded
+  (NoSuchMethodError on Android 11–13). Fixed with an SDK-guarded
+  legacy overload, crash-proof provider install, and an in-app
+  CrashLog that shows the last crash's stack trace on next launch.
+- The wireless UX was then rebuilt to Shizuku's literal structure
+  (from its source): PairingTutorialActivity (notification gating,
+  MIUI/local-network warnings, Developer-options shortcut),
+  PairingService (foreground service; notification with RemoteInput
+  code entry once the pairing announcement is discovered; the port
+  travels in the reply intent), and StarterActivity (terminal log:
+  automatic connect-port discovery, connect, starter command, binder
+  wait, auto-close). Manual port/code fields remain as a fallback.
+- Build evidence: assembleDebug + assembleRelease + unit tests 10/10 +
+  lintDebug with 0 errors; signed release verified (dedicated Azm
+  Admin cert). Pairing/start still to be confirmed on Ahmed's device.
+
 ## Wireless-debugging start — implemented in v1.0.1 (2026-11-11)
 - Added the same day Ahmed rejected the computer-only start on his
   unrooted phone: the manager now pairs and starts the server entirely

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -11,14 +13,38 @@ android {
         applicationId = "io.github.alnajashia.azmadmin"
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 4
+        versionName = "1.0.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("azmAdminRelease") {
+            // Azm Admin's dedicated release key lives OUTSIDE the project
+            // (~/workspace/azm-admin/keys/, never in the repo), following
+            // the same pattern as Azm's permanent key. Without it the
+            // release build stays unsigned rather than falling back to a
+            // debug key.
+            val propsFile = file(
+                System.getenv("AZMADMIN_KEYSTORE_PROPERTIES")
+                    ?: "${rootDir}/../keys/keystore.properties",
+            )
+            if (propsFile.exists()) {
+                val props = Properties().apply {
+                    propsFile.inputStream().use { load(it) }
+                }
+                storeFile = propsFile.parentFile.resolve(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("azmAdminRelease")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

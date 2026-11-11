@@ -5,6 +5,9 @@
          ADB daemon over the local network interface (127.0.0.1) once the
          user pairs it from Developer options. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission
@@ -32,6 +35,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Pairing guide (Shizuku-shaped flow): starts PairingService
+             and walks the user through Developer options. -->
+        <activity
+            android:name=".manager.PairingTutorialActivity"
+            android:exported="false" />
+
+        <!-- Terminal-style log screen for the wireless start. -->
+        <activity
+            android:name=".manager.StarterActivity"
+            android:exported="false"
+            android:label="@string/starter_title" />
+
+        <!-- Foreground service behind the pairing notification: it
+             listens for the mDNS pairing announcement and pairs with
+             the code the user types into the notification. -->
+        <service
+            android:name=".manager.PairingService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="adb_pairing" />
+        </service>
 
         <!-- Opened by the privileged server (via `am start`) when a client
              requests authorization. The approval itself is recorded by the

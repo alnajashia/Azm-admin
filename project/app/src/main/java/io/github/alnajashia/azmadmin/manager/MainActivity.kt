@@ -67,6 +67,14 @@ class MainActivity : AppCompatActivity() {
 
         adbCommandText.text = ServerStarter.adbCommand(this)
 
+        CrashLog.readAndClear(this)?.let { crash ->
+            AlertDialog.Builder(this)
+                .setTitle(R.string.crash_title)
+                .setMessage(crash.take(3000))
+                .setPositiveButton(R.string.close, null)
+                .show()
+        }
+
         discovery = WirelessStarter.Discovery(
             this,
             onPairingPort = { port ->
@@ -85,6 +93,12 @@ class MainActivity : AppCompatActivity() {
             },
         )
 
+        findViewById<MaterialButton>(R.id.pairFlowButton).setOnClickListener {
+            startActivity(android.content.Intent(this, PairingTutorialActivity::class.java))
+        }
+        findViewById<MaterialButton>(R.id.startFlowButton).setOnClickListener {
+            startActivity(android.content.Intent(this, StarterActivity::class.java))
+        }
         findViewById<MaterialButton>(R.id.pairButton).setOnClickListener {
             val port = pairingPortInput.text?.toString()?.toIntOrNull() ?: -1
             val code = pairingCodeInput.text?.toString()?.trim().orEmpty()
