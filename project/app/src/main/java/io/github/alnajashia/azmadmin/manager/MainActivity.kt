@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pairingCodeInput: TextInputEditText
     private lateinit var connectPortInput: TextInputEditText
     private lateinit var wirelessStatusText: TextView
+    private lateinit var pairingStateText: TextView
     private var discovery: WirelessStarter.Discovery? = null
 
     @Volatile
@@ -64,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         pairingCodeInput = findViewById(R.id.pairingCodeInput)
         connectPortInput = findViewById(R.id.connectPortInput)
         wirelessStatusText = findViewById(R.id.wirelessStatusText)
+        pairingStateText = findViewById(R.id.pairingStateText)
 
         adbCommandText.text = ServerStarter.adbCommand(this)
 
@@ -202,6 +204,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        pairingStateText.text = getString(
+            if (PairingState.isPaired(this)) R.string.pairing_state_paired
+            else R.string.pairing_state_unpaired
+        )
         refresh()
     }
 

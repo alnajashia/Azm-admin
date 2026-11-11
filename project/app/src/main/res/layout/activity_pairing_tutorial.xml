@@ -23,6 +23,43 @@
             android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
         <LinearLayout
+            android:id="@+id/alreadyPairedCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pairing_already_title"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/pairing_already_body"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/startNowButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/pairing_start_now" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/repairButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/pairing_again" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/notificationDisabled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

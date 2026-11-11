@@ -25,6 +25,14 @@ class PairingTutorialActivity : AppCompatActivity() {
 
     private var notificationEnabled = false
 
+    /**
+     * When the phone already trusts our key, this screen must not arm
+     * the pairing notification again — pairing is a one-time act. It
+     * shows the "already paired" card instead, and only an explicit
+     * tap on "Pair again" sets [repairArmed] and starts the service.
+     */
+    private var repairArmed = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pairing_tutorial)
@@ -52,6 +60,17 @@ class PairingTutorialActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
             }
         }
+        findViewById<MaterialButton>(R.id.startNowButton).setOnClickListener {
+            startActivity(Intent(this, StarterActivity::class.java))
+            finish()
+        }
+        findViewById<MaterialButton>(R.id.repairButton).setOnClickListener {
+            repairArmed = true
+            syncVisibility()
+            if (notificationEnabled) {
+                ContextCompat.startForegroundService(this, PairingService.startIntent(this))
+            }
+        }
         findViewById<MaterialButton>(R.id.notificationOptionsButton).setOnClickListener {
             val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
@@ -67,13 +86,24 @@ class PairingTutorialActivity : AppCompatActivity() {
         notificationEnabled = getSystemService(NotificationManager::class.java)
             .areNotificationsEnabled()
         syncVisibility()
-        if (notificationEnabled) {
+        if (showingAlreadyPaired()) {
+            // Also retire any pairing search left over from an earlier
+            // session, so its notification cannot linger either.
+            stopService(Intent(this, PairingService::class.java))
+        } else if (notificationEnabled) {
             ContextCompat.startForegroundService(this, PairingService.startIntent(this))
         }
     }
 
+    private fun showingAlreadyPaired(): Boolean =
+        PairingState.isPaired(this) && !repairArmed
+
     private fun syncVisibility() {
-        val stepsVisibility = if (notificationEnabled) View.VISIBLE else View.GONE
+        val alreadyPaired = notificationEnabled && showingAlreadyPaired()
+        findViewById<View>(R.id.alreadyPairedCard).visibility =
+            if (alreadyPaired) View.VISIBLE else View.GONE
+        val stepsVisibility =
+            if (notificationEnabled && !alreadyPaired) View.VISIBLE else View.GONE
         findViewById<View>(R.id.step1).visibility = stepsVisibility
         findViewById<View>(R.id.step2).visibility = stepsVisibility
         findViewById<View>(R.id.step3).visibility = stepsVisibility

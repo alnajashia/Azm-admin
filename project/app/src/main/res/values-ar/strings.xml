@@ -51,6 +51,12 @@
     <string name="pairing_developer_options">خيارات للمطور</string>
     <string name="pairing_step2">٢ — أدخل الرمز في إشعار «إدارة عزم» المرسل لإكمال الاقتران.</string>
     <string name="pairing_step3">٣ — ارجع إلى «إدارة عزم» وقم بتشغيله.</string>
+    <string name="pairing_state_paired">مقترن بهذا الهاتف ✓ — اضغط «البدء بالتشغيل» فقط.</string>
+    <string name="pairing_state_unpaired">غير مقترن بعد — اقترن مرة واحدة، وبعدها يعمل «البدء بالتشغيل» وحده.</string>
+    <string name="pairing_already_title">مقترن مسبقًا ✓</string>
+    <string name="pairing_already_body">هذا الهاتف يثق بـ«إدارة عزم» من قبل، فلا شيء يُقترن من جديد — الاقتران خطوة لمرة واحدة. اضغط «البدء بالتشغيل» وسيعمل الخادم.</string>
+    <string name="pairing_start_now">البدء بالتشغيل الآن</string>
+    <string name="pairing_again">إعادة الاقتران</string>
     <string name="starter_title">مفتاح التشغيل</string>
     <string name="starter_searching">جارٍ البدء عبر ADB اللاسلكي، والبحث عن خدمة الاتصال…</string>
     <string name="starter_starting">جارٍ البدء عبر ADB اللاسلكي في المنفذ %1$d…</string>

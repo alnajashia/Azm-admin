@@ -49,6 +49,36 @@ Updated 2026-11-11. Statuses use the brief's three levels.
   dex contains zero Shizuku references. Not published and Azm's version
   not bumped — device E2E comes first.
 
+## v1.0.6 — the app remembers it is paired (2026-11-11)
+- Ahmed: pressing Pairing again re-posted the pairing notification
+  even though he had already paired. Android gives apps no API to
+  list adbd's trusted keys, so PairingState records proofs the app
+  itself observes: a successful pairing, or a successful authenticated
+  connect (adbd only allows trusted keys). It is cleared when a
+  connect fails with AdbAuthenticationFailedException (e.g. after the
+  user forgets the app in the paired-devices list).
+- PairingTutorialActivity: when the record says paired, it shows an
+  "Already paired ✓" card (with Start-now and a deliberate Pair-again
+  button), does NOT start PairingService, and stops any leftover
+  pairing search. The main screen shows the pairing state above the
+  flow buttons. Fresh installs start with an empty record that
+  self-heals on the first successful Start.
+- Build evidence: assemble + tests 10/10 + lint 0 errors; signed
+  release verified (dedicated cert). Includes the v1.0.5 endpoint fix.
+
+## v1.0.5 — try every announced endpoint (2026-11-11)
+- Ahmed's v1.0.4 device run (with the new full-stack error output)
+  proved the host fix worked (connecting to 192.168.8.182) but the
+  announced port is persistently STALE on his phone: 39719 refused
+  (ECONNREFUSED) while Settings showed the live port as 39287; the
+  single retry saw no different announcement.
+- StarterActivity no longer trusts one resolve: it collects every
+  distinct announced endpoint for ~6 s, tries them newest-first, and
+  if all fail restarts discovery fresh for ~10 s and tries any new
+  endpoints before reporting the real error.
+- Build evidence: assemble + tests 10/10 + lint 0 errors; signed
+  release verified (dedicated cert). On-device confirmation pending.
+
 ## v1.0.4 — wireless connect endpoint fix (2026-11-11)
 - Ahmed's device test of v1.0.3 proved pairing works end-to-end (the
   system paired-devices list shows "AzmAdmin"; the pairing

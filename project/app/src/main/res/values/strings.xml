@@ -51,6 +51,12 @@
     <string name="pairing_developer_options">Developer options</string>
     <string name="pairing_step2">2 — Enter the code in the Azm Admin notification sent to you.</string>
     <string name="pairing_step3">3 — Return to Azm Admin and tap Start.</string>
+    <string name="pairing_state_paired">Paired with this phone ✓ — just tap Start.</string>
+    <string name="pairing_state_unpaired">Not paired yet — pair once, and Start works on its own afterwards.</string>
+    <string name="pairing_already_title">Already paired ✓</string>
+    <string name="pairing_already_body">This phone already trusts Azm Admin, so there is nothing to pair again — pairing is a one-time step. Tap Start and the server comes up.</string>
+    <string name="pairing_start_now">Start now</string>
+    <string name="pairing_again">Pair again</string>
     <string name="starter_title">Starter</string>
     <string name="starter_searching">Starting with wireless adb, searching for the connect service…</string>
     <string name="starter_starting">Starting with wireless adb in port %1$d…</string>

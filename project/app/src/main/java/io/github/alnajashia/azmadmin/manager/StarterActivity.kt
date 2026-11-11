@@ -6,10 +6,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import io.github.alnajashia.azmadmin.R
 import io.github.alnajashia.azmadmin.client.AzmAdmin
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The starter screen, mirroring Shizuku's StarterActivity: a terminal
@@ -49,44 +46,71 @@ class StarterActivity : AppCompatActivity() {
         return WirelessStarter.startServerLogged(this, endpoint.first, endpoint.second) { line -> log(line) }
     }
 
+    /**
+     * Discovery on Ahmed's phone keeps serving the STALE announcement
+     * first (a port from an earlier wireless-debugging session; the
+     * connect is refused on it while the live port differs). So no
+     * single resolve is trusted: collect EVERY distinct announced
+     * endpoint for a few seconds, then try them newest-first; if all
+     * fail, restart discovery fresh and try whatever new endpoints the
+     * second round surfaces.
+     */
     private fun runWirelessStart() {
         log(getString(R.string.starter_searching))
-        val endpointRef = AtomicReference<Pair<String, Int>?>(null)
-        val latch = CountDownLatch(1)
-        val discovery = PortDiscovery(this, PortDiscovery.TLS_CONNECT) { host, port ->
-            endpointRef.set(host to port)
-            latch.countDown()
-        }
-        discovery.start()
-        val found = latch.await(30, TimeUnit.SECONDS)
-        if (!found) {
+        val endpoints = mutableListOf<Pair<String, Int>>()
+        val tried = mutableSetOf<Pair<String, Int>>()
+        var lastResult: WirelessStarter.WirelessResult? = null
+
+        fun collect(discovery: PortDiscovery, seconds: Long) {
+            val end = System.currentTimeMillis() + seconds * 1000
+            while (System.currentTimeMillis() < end) {
+                Thread.sleep(200)
+            }
             discovery.stop()
-            log(getString(R.string.starter_no_service))
-            return
         }
 
-        var endpoint = endpointRef.get() ?: run {
-            discovery.stop()
-            log(getString(R.string.starter_no_service))
-            return
+        fun tryUntried(): Boolean {
+            val snapshot = synchronized(endpoints) { endpoints.toList() }
+            for (endpoint in snapshot.asReversed()) {
+                if (!tried.add(endpoint)) continue
+                val result = tryStart(endpoint)
+                if (result.ok) return true
+                lastResult = result
+                log("info: ${endpoint.first}:${endpoint.second} did not answer; trying the next announcement…")
+            }
+            return false
         }
-        var result = tryStart(endpoint)
-        if (!result.ok) {
-            // Announcements can be stale (a port from an earlier
-            // session). Give discovery a few more seconds — a fresher
-            // announcement replaces the endpoint — and retry once on
-            // the newest endpoint before giving up.
-            log("info: retrying with the latest announcement…")
-            Thread.sleep(4000)
-            val newer = endpointRef.get()
-            if (newer != null && newer != endpoint) {
-                endpoint = newer
-                result = tryStart(endpoint)
+
+        var discovery = PortDiscovery(this, PortDiscovery.TLS_CONNECT) { host, port ->
+            synchronized(endpoints) {
+                val endpoint = host to port
+                endpoints.remove(endpoint)
+                endpoints.add(endpoint)
             }
         }
-        discovery.stop()
-        if (!result.ok) {
-            log("error: ${result.message}")
+        discovery.start()
+        collect(discovery, 6)
+        var startedOk = tryUntried()
+        if (!startedOk) {
+            log("info: searching again for a fresher announcement…")
+            discovery = PortDiscovery(this, PortDiscovery.TLS_CONNECT) { host, port ->
+                synchronized(endpoints) {
+                    val endpoint = host to port
+                    endpoints.remove(endpoint)
+                    endpoints.add(endpoint)
+                }
+            }
+            discovery.start()
+            collect(discovery, 10)
+            startedOk = tryUntried()
+        }
+        if (!startedOk) {
+            val failure = lastResult
+            if (failure == null) {
+                log(getString(R.string.starter_no_service))
+            } else {
+                log("error: ${failure.message}")
+            }
             return
         }
 

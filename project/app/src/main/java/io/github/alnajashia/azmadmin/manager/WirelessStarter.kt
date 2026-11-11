@@ -37,6 +37,7 @@ object WirelessStarter {
             val manager = AzmAdbManager.getInstance(context)
             val paired = manager.pair(host, port, code)
             if (paired) {
+                PairingState.markPaired(context)
                 WirelessResult(true, "paired")
             } else {
                 WirelessResult(false, "pairing rejected — check the code and that the pairing screen is still open")
@@ -68,6 +69,9 @@ object WirelessStarter {
                 if (!connected) {
                     return WirelessResult(false, "connect failed — pair first and check the connect port")
                 }
+                // An authenticated connect is itself proof the phone
+                // trusts our key: record the pairing as verified.
+                PairingState.markPaired(context)
                 log("info: connected")
             }
             val command = "mkdir -p /data/local/tmp/azmadmin; " +
@@ -83,6 +87,18 @@ object WirelessStarter {
             log("info: starter command sent")
             WirelessResult(true, "start command sent")
         } catch (e: Exception) {
+            // If adbd rejected our key (the user forgot this app in
+            // the paired-devices list), the pairing record is stale:
+            // clear it so the UI asks for a fresh pairing instead of
+            // claiming all is well.
+            var cause: Throwable? = e
+            while (cause != null) {
+                if (cause.javaClass.simpleName == "AdbAuthenticationFailedException") {
+                    PairingState.clearPaired(context)
+                    break
+                }
+                cause = cause.cause
+            }
             WirelessResult(false, "wireless start failed: ${describe(e)}")
         }
     }
