@@ -21,37 +21,41 @@ import android.content.Context
  */
 object WirelessStarter {
 
-    private const val HOST = "127.0.0.1"
-
     data class WirelessResult(val ok: Boolean, val message: String)
 
-    fun pair(context: Context, port: Int, code: String): WirelessResult {
+    /** Full exception description — class, message and stack — so a
+     *  failure names itself instead of surfacing as "failed: null". */
+    fun describe(e: Throwable): String =
+        "${e.javaClass.name}: ${e.message}\n${android.util.Log.getStackTraceString(e)}".trim()
+
+    fun pair(context: Context, host: String, port: Int, code: String): WirelessResult {
         if (port !in 1..65535) return WirelessResult(false, "invalid pairing port")
         if (code.length != 6 || !code.all { it.isDigit() }) {
             return WirelessResult(false, "pairing code must be 6 digits")
         }
         return try {
             val manager = AzmAdbManager.getInstance(context)
-            val paired = manager.pair(HOST, port, code)
+            val paired = manager.pair(host, port, code)
             if (paired) {
                 WirelessResult(true, "paired")
             } else {
                 WirelessResult(false, "pairing rejected — check the code and that the pairing screen is still open")
             }
         } catch (e: Exception) {
-            WirelessResult(false, "pairing failed: ${e.message}")
+            WirelessResult(false, "pairing failed: ${describe(e)}")
         }
     }
 
-    fun startServer(context: Context, port: Int): WirelessResult =
-        startServerLogged(context, port) {}
+    fun startServer(context: Context, host: String, port: Int): WirelessResult =
+        startServerLogged(context, host, port) {}
 
     /**
-     * Connects to adbd on [port] and runs the starter command, reporting
-     * each real step to [log] (the Starter screen shows these lines).
+     * Connects to adbd at [host]:[port] and runs the starter command,
+     * reporting each real step to [log] (the Starter screen shows them).
      */
     fun startServerLogged(
         context: Context,
+        host: String,
         port: Int,
         log: (String) -> Unit,
     ): WirelessResult {
@@ -59,8 +63,8 @@ object WirelessStarter {
         return try {
             val manager = AzmAdbManager.getInstance(context)
             if (!manager.isConnected) {
-                log("info: connecting to $HOST:$port")
-                val connected = manager.connect(HOST, port)
+                log("info: connecting to $host:$port")
+                val connected = manager.connect(host, port)
                 if (!connected) {
                     return WirelessResult(false, "connect failed — pair first and check the connect port")
                 }
@@ -79,7 +83,7 @@ object WirelessStarter {
             log("info: starter command sent")
             WirelessResult(true, "start command sent")
         } catch (e: Exception) {
-            WirelessResult(false, "wireless start failed: ${e.message}")
+            WirelessResult(false, "wireless start failed: ${describe(e)}")
         }
     }
 
@@ -94,8 +98,8 @@ object WirelessStarter {
         onPairingPort: (Int) -> Unit,
         onConnectPort: (Int) -> Unit,
     ) {
-        private val pairing = PortDiscovery(context, PortDiscovery.TLS_PAIRING, onPairingPort)
-        private val connect = PortDiscovery(context, PortDiscovery.TLS_CONNECT, onConnectPort)
+        private val pairing = PortDiscovery(context, PortDiscovery.TLS_PAIRING) { _, port -> onPairingPort(port) }
+        private val connect = PortDiscovery(context, PortDiscovery.TLS_CONNECT) { _, port -> onConnectPort(port) }
 
         fun start() {
             pairing.start()

@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
             val code = pairingCodeInput.text?.toString()?.trim().orEmpty()
             wirelessStatusText.text = getString(R.string.wireless_working)
             io.execute {
-                val result = WirelessStarter.pair(this, port, code)
+                val result = WirelessStarter.pair(this, "127.0.0.1", port, code)
                 runOnUiThread {
                     wirelessStatusText.text = getString(R.string.wireless_result, result.message)
                 }
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             val port = connectPortInput.text?.toString()?.toIntOrNull() ?: -1
             wirelessStatusText.text = getString(R.string.wireless_working)
             io.execute {
-                val result = WirelessStarter.startServer(this, port)
+                val result = WirelessStarter.startServer(this, "127.0.0.1", port)
                 runOnUiThread {
                     wirelessStatusText.text = getString(R.string.wireless_result, result.message)
                 }

@@ -10,14 +10,17 @@ import java.util.concurrent.Executors
  * mDNS discovery for one wireless-debugging service type, in the role of
  * Shizuku's AdbMdns: Android announces `_adb-tls-pairing._tcp` while the
  * pairing dialog is open and `_adb-tls-connect._tcp` whenever wireless
- * debugging is on; each announcement carries the current port, which is
- * reported to [onPort]. Ports change between sessions, so discovery —
+ * debugging is on; each announcement carries the current endpoint —
+ * the device's network address AND its port — reported to [onEndpoint].
+ * Both halves matter: adbd's TLS listener is bound to the Wi-Fi
+ * interface on many ROMs, so connecting to 127.0.0.1 can fail even with
+ * the right port, and ports change between sessions, so discovery —
  * not any stored value — is the source of truth.
  */
 class PortDiscovery(
     context: Context,
     private val serviceType: String,
-    private val onPort: (Int) -> Unit,
+    private val onEndpoint: (host: String, port: Int) -> Unit,
 ) {
     private val nsd = context.getSystemService(NsdManager::class.java)
     private val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
@@ -30,7 +33,9 @@ class PortDiscovery(
         val listener = object : NsdManager.ResolveListener {
             override fun onServiceResolved(resolved: NsdServiceInfo) {
                 if (resolved.serviceType.contains("_adb-tls-") && resolved.port > 0) {
-                    onPort(resolved.port)
+                    @Suppress("DEPRECATION")
+                    val host = resolved.host?.hostAddress ?: return
+                    onEndpoint(host, resolved.port)
                 }
             }
 

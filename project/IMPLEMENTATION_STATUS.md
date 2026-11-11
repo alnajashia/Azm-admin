@@ -49,6 +49,24 @@ Updated 2026-11-11. Statuses use the brief's three levels.
   dex contains zero Shizuku references. Not published and Azm's version
   not bumped — device E2E comes first.
 
+## v1.0.4 — wireless connect endpoint fix (2026-11-11)
+- Ahmed's device test of v1.0.3 proved pairing works end-to-end (the
+  system paired-devices list shows "AzmAdmin"; the pairing
+  notification reported success) but Start failed with
+  "wireless start failed: null": discovery found port 39719 — a stale
+  announcement, while Settings showed the live connect port as 39287 —
+  and the connect went to 127.0.0.1 with the exception's message
+  swallowed.
+- Fix: PortDiscovery now reports the announced endpoint (host + port);
+  pairing and connect use the device's announced network address
+  (adbd's TLS listener is interface-bound on many ROMs); StarterActivity
+  retries once on the freshest announcement when the first attempt
+  fails; every wireless error now carries the exception class, message
+  and stack trace instead of a bare "null".
+- Build evidence: assemble + unit tests 10/10 + lint 0 errors; signed
+  release verified (dedicated Azm Admin cert). On-device confirmation
+  still pending Ahmed's run.
+
 ## v1.0.3 — Shizuku-shaped wireless flow + v1.0.1 crash fix (2026-11-11)
 - v1.0.1 crashed on Ahmed's phone at launch: the mDNS discovery called
   the API-34-only `resolveService(Executor)` overload unguarded

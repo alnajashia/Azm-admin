@@ -66,9 +66,10 @@ class PairingService : Service() {
                 val code = RemoteInput.getResultsFromIntent(intent)
                     ?.getCharSequence(REMOTE_INPUT_KEY)?.toString().orEmpty()
                 val port = intent.getIntExtra(EXTRA_PORT, -1)
+                val host = intent.getStringExtra(EXTRA_HOST) ?: "127.0.0.1"
                 if (port > 0 && code.isNotBlank()) {
                     postForeground(workingNotification())
-                    io.execute { doPair(code, port) }
+                    io.execute { doPair(code, host, port) }
                 } else {
                     postForeground(searchingNotification())
                 }
@@ -103,11 +104,11 @@ class PairingService : Service() {
     private fun startSearch() {
         if (searching) return
         searching = true
-        discovery = PortDiscovery(this, PortDiscovery.TLS_PAIRING) { port ->
+        discovery = PortDiscovery(this, PortDiscovery.TLS_PAIRING) { host, port ->
             // A pairing announcement appeared (or moved): re-post the
-            // input notification addressed at the current port.
+            // input notification addressed at the current endpoint.
             val manager = getSystemService(NotificationManager::class.java)
-            if (searching) manager.notify(NOTIFICATION_ID, inputNotification(port))
+            if (searching) manager.notify(NOTIFICATION_ID, inputNotification(host, port))
         }.also { it.start() }
     }
 
@@ -117,8 +118,8 @@ class PairingService : Service() {
         discovery = null
     }
 
-    private fun doPair(code: String, port: Int) {
-        val result = WirelessStarter.pair(this, port, code)
+    private fun doPair(code: String, host: String, port: Int) {
+        val result = WirelessStarter.pair(this, host, port, code)
         stopSearch()
         stopForeground(STOP_FOREGROUND_REMOVE)
         val notification = Notification.Builder(this, CHANNEL_ID)
@@ -129,6 +130,7 @@ class PairingService : Service() {
                 ),
             )
             .setContentText(result.message)
+            .setStyle(Notification.BigTextStyle().bigText(result.message))
             .setAutoCancel(true)
             .build()
         getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
@@ -151,9 +153,10 @@ class PairingService : Service() {
         baseNotification(R.string.pairing_working_title, R.string.pairing_working_text)
             .build()
 
-    private fun inputNotification(port: Int): Notification {
+    private fun inputNotification(host: String, port: Int): Notification {
         val replyIntent = Intent(this, PairingService::class.java)
             .setAction(ACTION_REPLY)
+            .putExtra(EXTRA_HOST, host)
             .putExtra(EXTRA_PORT, port)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
             if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0
@@ -188,6 +191,7 @@ class PairingService : Service() {
         private const val ACTION_START = "io.github.alnajashia.azmadmin.pairing.START"
         private const val ACTION_STOP = "io.github.alnajashia.azmadmin.pairing.STOP"
         private const val ACTION_REPLY = "io.github.alnajashia.azmadmin.pairing.REPLY"
+        private const val EXTRA_HOST = "host"
         private const val EXTRA_PORT = "port"
         private const val REMOTE_INPUT_KEY = "pairing_code"
 

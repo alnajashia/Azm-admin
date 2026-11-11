@@ -9,7 +9,7 @@ import io.github.alnajashia.azmadmin.client.AzmAdmin
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The starter screen, mirroring Shizuku's StarterActivity: a terminal
@@ -44,24 +44,47 @@ class StarterActivity : AppCompatActivity() {
         }
     }
 
+    private fun tryStart(endpoint: Pair<String, Int>): WirelessStarter.WirelessResult {
+        log(getString(R.string.starter_starting, endpoint.second))
+        return WirelessStarter.startServerLogged(this, endpoint.first, endpoint.second) { line -> log(line) }
+    }
+
     private fun runWirelessStart() {
         log(getString(R.string.starter_searching))
-        val portRef = AtomicInteger(-1)
+        val endpointRef = AtomicReference<Pair<String, Int>?>(null)
         val latch = CountDownLatch(1)
-        val discovery = PortDiscovery(this, PortDiscovery.TLS_CONNECT) { port ->
-            if (portRef.compareAndSet(-1, port)) latch.countDown()
+        val discovery = PortDiscovery(this, PortDiscovery.TLS_CONNECT) { host, port ->
+            endpointRef.set(host to port)
+            latch.countDown()
         }
         discovery.start()
         val found = latch.await(30, TimeUnit.SECONDS)
-        discovery.stop()
         if (!found) {
+            discovery.stop()
             log(getString(R.string.starter_no_service))
             return
         }
-        val port = portRef.get()
-        log(getString(R.string.starter_starting, port))
 
-        val result = WirelessStarter.startServerLogged(this, port) { line -> log(line) }
+        var endpoint = endpointRef.get() ?: run {
+            discovery.stop()
+            log(getString(R.string.starter_no_service))
+            return
+        }
+        var result = tryStart(endpoint)
+        if (!result.ok) {
+            // Announcements can be stale (a port from an earlier
+            // session). Give discovery a few more seconds — a fresher
+            // announcement replaces the endpoint — and retry once on
+            // the newest endpoint before giving up.
+            log("info: retrying with the latest announcement…")
+            Thread.sleep(4000)
+            val newer = endpointRef.get()
+            if (newer != null && newer != endpoint) {
+                endpoint = newer
+                result = tryStart(endpoint)
+            }
+        }
+        discovery.stop()
         if (!result.ok) {
             log("error: ${result.message}")
             return
